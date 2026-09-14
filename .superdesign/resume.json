@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "targets": {
+    "settings:default-prompt": {
+      "targetKind": "existing-ui",
+      "projectId": "b9379c0a-649b-420c-89ec-4ce8ed77fe3c",
+      "baselineDraftId": "f1e1a9cc-019c-4331-9b73-2a47d490f797",
+      "baselineVersion": 1,
+      "activeDraftId": "f1e1a9cc-019c-4331-9b73-2a47d490f797",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md",
+        "client.js",
+        ".superdesign/init/theme.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "1c692a6ab0e3efc83eda4427a3ff4b7b49b43200b7e4a07fa9a60ebd7848f77c",
+        "client.js": "4183506085791a3c3af284bd002f885b13caa589d3a87c498379317dbaa53e33",
+        ".superdesign/init/theme.md": "67e3a1073f21da3c7d041ce77a0ec7cfdaf88fa5e718662dd2cc1d7638157740"
+      },
+      "components": [],
+      "drafts": {
+        "f1e1a9cc-019c-4331-9b73-2a47d490f797": {
+          "title": "Default Prompt Settings — Refined Technical Workspace",
+          "visualDirection": "Harness-native vertical settings layout calibrated to the supplied 876x890 screenshot: 600px maximum plugin content width, stacked configuration fields, 2x2 status summary, wrapping actions, semantic host theme variables, neutral light fallback, and readable system UI typography",
+          "currentVersion": 4
+        }
+      },
+      "updatedAt": "2026-09-13T20:53:58.0764330+08:00"
+    }
+  }
+}
