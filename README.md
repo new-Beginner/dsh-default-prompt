@@ -1,128 +1,170 @@
+<div align="center">
+
 # dsh-default-prompt
 
-> **DeepSeek Harness 基础默认系统提示词插件**  
-> 像 OpenAI Codex 一样，将核心行为规范与基础指令直接、紧接注入在系统提示词（System Prompt）之后，赋予模型最高系统级权威度。
+**DeepSeek Harness 基础默认系统提示词插件**
 
----
+像 OpenAI Codex 一样，将核心行为规范与基础指令直接注入底层系统提示词（System Prompt），赋予模型最高系统级权威度。
+
+[![Release](https://img.shields.io/github/v/release/new-Beginner/dsh-default-prompt?display_name=tag&sort=semver)](https://github.com/new-Beginner/dsh-default-prompt/releases/latest)
+[![License](https://img.shields.io/github/license/new-Beginner/dsh-default-prompt)](LICENSE)
+[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20-339933?logo=node.js&logoColor=white)](package.json)
+[![Tests](https://img.shields.io/badge/tests-9%20passed-2ea44f)](VERIFICATION.md)
+[![DeepSeek Harness](https://img.shields.io/badge/DeepSeek%20Harness-plugin-4f6ef7)](https://github.com/new-Beginner/dsh-default-prompt)
+
+[核心设计](#why) · [功能特性](#features) · [安装与更新](#installation) · [配置指南](#configuration) · [斜杠指令](#commands) · [质量验证](#quality)
+
+</div>
+
+> [!NOTE]
+> 当前稳定版本为 **v1.1.1**。支持全局文件、项目工作区配置、Web 控制台实时预览与一键同步 OpenAI Codex 规则。
+
+<a id="why"></a>
 
 ## 🌟 为什么需要这个插件？
 
-在 DeepSeek Harness 默认机制下，`AGENTS.md` 是通过 `dsh-agent-instructions` 包装在带有 `<system-reminder>` 的 **用户消息（User Role Message）** 中注入对话历史的，并且附带了：
+在 DeepSeek Harness 默认机制下，用户的自定义全局规则或 `AGENTS.md` 是通过 `dsh-agent-instructions` 包装在带有 `<system-reminder>` 的 **用户消息（User Role Message）** 中注入对话历史的，并且附带了：
 > *"They do not override system, developer, or direct user instructions."*
 
-这会导致大语言模型（尤其是遵循系统提示词能力较强、或对话轮次变多后的模型）**降低对用户全局指令的服从优先级**甚至忽略。
+这会导致大语言模型（尤其是长轮次对话或遵循系统提示词能力极强的模型）**降低对用户全局指令的服从优先级**甚至被模型忽略。
 
-而 **OpenAI Codex** 的做法是：将用户的全局/开发者规则（如 `~/.codex/AGENTS.md`、developer instructions）**直接编入最顶层的 System Prompt** 中，紧跟在 Assistant 角色定义之后。
+而 **OpenAI Codex** 的标准做法是：将用户的全局/开发者规则（如 `~/.codex/AGENTS.md`、developer instructions）**直接编入最顶层的 System Prompt** 中，紧跟在 Assistant 角色定义之后。
 
-本插件 `dsh-default-prompt` 为 DeepSeek Harness 带来了与 Codex 完全一致的机制与体验：
-- **真正的系统级提示词**：通过 `systemPrompt.section` 直接成为模型底层 System Prompt 的一部分。
-- **紧随角色定义 (order: 10)**：默认紧接在 `You are a coding agent powered by ...` 之后，比任何工具说明、环境说明更靠前，指令优先级最高。
-- **零 Token 浪费**：在禁用或内容为空时自动剔除，不占用任何系统提示词 Token。
-
----
-
-## ✨ 核心特性
-
-1. **五种灵活的注入位置**：
-   - 🎯 **紧跟角色身份（after-persona，权重 10，默认推荐）**：像 Codex 一样，位于系统开场白之后、所有工具说明之前。
-   - 🛠️ **工具说明前（before-tools，权重 950）**。
-   - 📦 **工具说明后（after-tools，权重 9950）**：位于所有工具描述之后，环境上下文之前。
-   - 🔚 **系统提示词末尾（end，权重 10300）**：在整个系统提示词最后。
-   - ⚙️ **自定义权重（custom）**：自由指定任意数字 order。
-
-2. **多样化的提示词来源**：
-   - **全局文件模式（推荐）**：默认读取 `~/.dsh/DEFAULT_PROMPT.md`，文件保存后即刻自动热重载。
-   - **工作区项目覆盖/合并**：自动发现当前打开的项目根目录下 `.dsh/prompt.md` 或 `PROMPT.md`，实现跨项目灵活定制。
-   - **行内文本模式**：直接在 Web 设置界面中编写并持久化。
-   - **组合模式 (Combine)**：全局文件 + 项目工作区文件 + 行内文本自动合并。
-
-3. **一键同步 Codex 规则**：
-   - 自动检测本地 `~/.codex/AGENTS.md`。
-   - 提供一键导入按钮与指令，老用户无需重复编写提示词。
-
-4. **现代化 Web 控制台**：
-   - 在 DSH 设置菜单中提供专属的 **「提示词设置」** 设置面板。
-   - 支持在线查看、实时编辑保存、重置为官方推荐模板。
-   - **实时生效预览**：直观展示最终拼装并注入 LLM System Prompt 的真实内容与字数统计。
-
-5. **斜杠指令支持 (/prompt)**：
-   - `/prompt` 或 `/prompt status`：查看当前提示词激活状态与内容预览。
-   - `/prompt reload`：手动刷新磁盘文件缓存。
-   - `/prompt path`：查看提示词文件物理路径与存在状态。
-   - `/prompt import-codex`：一键导入本地 Codex 规则。
+| 对比维度 | DSH 原生 `<system-reminder>` | dsh-default-prompt (Codex 范式) |
+| :--- | :--- | :--- |
+| **注入层级** | 对话流中的 User 角色消息 | 真实的底层 **System Prompt** |
+| **执行权威度** | 次级（受限于 "do not override system"） | **最高系统级权威度**（System Level） |
+| **注入位置** | 历史上下文末尾，容易受上下文漂移干扰 | **紧接开场角色定义（order: 10）** 或自定义位置 |
+| **Token 消耗** | 即使无规则也会注入空包装 | **零冗余**，未启用或内容为空时自动剔除 |
 
 ---
 
-## 🚀 快速开始与安装
+<a id="features"></a>
 
-### 方式一：打包为 .tgz 本地安装（推荐）
+## ✨ 功能特性
 
-1. **打包插件**：
-   在插件项目根目录下运行打包命令：
-   ```bash
-   npm pack
-   ```
-   会生成类似 `dsh-default-prompt-1.1.1.tgz` 的压缩包。
-
-2. **在 DSH 桌面配置文件中注册**：
-   打开你的 DSH 桌面配置：`~/.dsh/profiles/desktop/package.json`
-   
-   在 `dependencies` 中添加：
-   ```json
-   {
-     "dependencies": {
-       "dsh-default-prompt": "file:D:/32057/Files_of_Desktop/Academic/AI/deepseekharness-plugin/inject-plugin/dsh-default-prompt-1.1.1.tgz"
-     },
-     "dsh": {
-       "profile": {
-         "bundles": [
-           "@deepseek-ai/dsh-base",
-           "@deepseek-ai/dsh-web-app",
-           "dsh-default-prompt"
-         ]
-       }
-     }
-   }
-   ```
-
-3. **重启 DeepSeek Harness**：
-   重启后，插件即会自动生效，并会在 `~/.dsh/DEFAULT_PROMPT.md` 初始化一份高品质默认提示词模板。
+| 提示词注入与权威度 | 灵活来源与现代化控制台 |
+| :--- | :--- |
+| **🎯 真正的系统级提示词**<br><br>• 通过 `systemPrompt.section` 直接注册到底层系统提示词<br>• 紧随角色定义（`after-persona`，权重 10），比工具说明更靠前<br>• 提供最高系统级指令遵循优先级，彻底解决全局规则被忽视的问题 | **📁 多层次提示词来源**<br><br>• **全局文件**：默认读取 `~/.dsh/DEFAULT_PROMPT.md`，保存即自动热重载<br>• **工作区合并**：自动发现项目根目录 `.dsh/prompt.md` 灵活覆写<br>• **行内编辑**：直接在 Web 面板编写并持久化<br>• **组合模式**：全局 + 项目工作区 + 行内文本无缝组合 |
+| **⚡ 零 Token 损耗与轻量响应**<br><br>• 插件停用或提示词为空时完全不产生任何额外 Token<br>• 基于文件修改时间（`mtime`）自动缓存，杜绝重复磁盘 I/O<br>• 纯系统级注入，不破坏聊天历史与会话持久化数据 | **🖥️ 现代化 Web 控制台与 Codex 兼容**<br><br>• DSH 设置面板专属「提示词设置」界面，完美适配亮暗主题<br>• 实时计算最终注入 System Prompt 的内容与字数统计<br>• 自动检测本地 `~/.codex/AGENTS.md`，支持一键同步迁移<br>• 丰富的 `/prompt` 系列斜杠指令 |
 
 ---
 
-## ⚙️ 配置说明 (settings.yaml)
+<a id="installation"></a>
 
-插件的设置会自动保存到 `~/.dsh/settings.yaml` 中的 `dsh-default-prompt` 命名空间下：
+## 📦 安装与更新
+
+### 方式一：使用 DSH 命令行从 GitHub 在线安装（推荐）
+
+通过 DeepSeek Harness 官方插件管理命令一键拉取并安装：
+
+```bash
+# 安装到 Web Profile（推荐，包含 Web 设置面板界面）
+dsh plugin --profile web add github:new-Beginner/dsh-default-prompt
+
+# 安装到 Desktop Profile
+dsh plugin --profile desktop add github:new-Beginner/dsh-default-prompt
+```
+
+### 方式二：下载 GitHub Release 安装包（离线安装）
+
+从 [GitHub Releases](https://github.com/new-Beginner/dsh-default-prompt/releases/latest) 下载预打包好的 `.tgz` 归档文件：
+
+```bash
+# 下载 Release 安装包后安装
+dsh plugin --profile web add ./dsh-default-prompt-1.1.1.tgz
+```
+
+> [!TIP]
+> 也可以直接使用 Release 直链安装：
+> ```bash
+> dsh plugin --profile web add https://github.com/new-Beginner/dsh-default-prompt/releases/download/v1.1.1/dsh-default-prompt-1.1.1.tgz
+> ```
+
+### 方式三：通过 1024 社区商店安装
+
+在安装了 `dsh-1024store` 插件后，可在 DSH 设置的 **1024 Store** 中直接搜索 `dsh-default-prompt` 点击安装，或使用 CLI：
+
+```bash
+npx @dsh-1024store/cli add new-Beginner/dsh-default-prompt --profile web
+```
+
+> [!IMPORTANT]
+> **安装或更新后请重启 DSH**。DSH 会在重启时重新加载 Cordis 补丁树并生效。初次启动后，插件会自动在 `~/.dsh/DEFAULT_PROMPT.md` 初始化一份高品质默认指令模板。
+
+---
+
+<a id="configuration"></a>
+
+## ⚙️ 配置指南
+
+插件的所有配置均会自动持久化到 `~/.dsh/settings.yaml` 中的 `dsh-default-prompt` 节点下：
+
+### 配置示例
 
 ```yaml
 dsh-default-prompt:
-  enabled: true                          # 是否启用注入 (true / false)
-  position: 'after-persona'              # 注入位置: after-persona | before-tools | after-tools | end | custom
-  customOrder: 10                        # 自定义权重 (仅 position 为 custom 时有效)
-  sourceMode: 'file'                     # 来源模式: file | inline | combine
-  filePath: ''                           # 自定义文件路径 (留空默认 ~/.dsh/DEFAULT_PROMPT.md)
-  promptText: ''                         # 行内提示词文本
-  enableWorkspaceFile: true              # 是否合并项目工作区中的 .dsh/prompt.md
-  syncCodex: false                       # 当默认文件不存在时，是否自动回退读取 ~/.codex/AGENTS.md
-  sectionTitle: ''                       # 可选的 Markdown 标题包裹
+  enabled: true
+  position: 'after-persona'
+  customOrder: 10
+  sourceMode: 'file'
+  filePath: ''
+  promptText: ''
+  enableWorkspaceFile: true
+  syncCodex: false
+  sectionTitle: ''
 ```
+
+### 配置项详细说明
+
+| 配置项 | 默认值 | 可选值 | 说明 |
+| :--- | :--- | :--- | :--- |
+| `enabled` | `true` | `true` / `false` | 全局开关：是否向底层系统提示词注入默认指令 |
+| `position` | `'after-persona'` | `after-persona`<br>`before-tools`<br>`after-tools`<br>`end`<br>`custom` | **注入位置**：<br>• `after-persona` (权重 10)：紧随角色定义之后（推荐，像 Codex）<br>• `before-tools` (权重 950)：所有工具说明之前<br>• `after-tools` (权重 9950)：工具说明之后、上下文之前<br>• `end` (权重 10300)：完整 System Prompt 最末尾<br>• `custom`：使用 `customOrder` 自定义权重 |
+| `customOrder` | `10` | 任意整数 | 仅当 `position` 设为 `custom` 时的排序权重 |
+| `sourceMode` | `'file'` | `file` / `inline` / `combine` | 提示词来源：`file`（文件）、`inline`（行内文本）、`combine`（自动合并） |
+| `filePath` | `''` | 任意有效文件路径 | 自定义提示词文件路径（留空默认使用 `~/.dsh/DEFAULT_PROMPT.md`） |
+| `promptText` | `''` | 任意文本 | 行内编辑的提示词内容（在 Web 设置界面可直接输入并保存） |
+| `enableWorkspaceFile` | `true` | `true` / `false` | 是否自动检查当前项目工作区根目录下的 `.dsh/prompt.md` 或 `PROMPT.md` 并智能叠加 |
+| `syncCodex` | `false` | `true` / `false` | 当默认文件不存在时，是否自动回退读取本机的 `~/.codex/AGENTS.md` |
+| `sectionTitle` | `''` | 任意字符串 | 可选的前置二级 Markdown 标题包裹（如 `基础默认规则`） |
 
 ---
 
-## 📝 默认模板参考
+<a id="commands"></a>
 
-默认初始化的 `~/.dsh/DEFAULT_PROMPT.md` 内容示例如下：
+## 💬 斜杠指令支持
 
-```markdown
-# 基础指令 (Default Instructions)
+在聊天输入框中输入以下指令即可快速管理提示词：
 
-- 请使用中文进行交流和解答。
-- 遇到需求不明确或存在多种实现路径时，主动提供合理选项供用户选择，并在用户确认后再执行关键变更。
-- 优先检索并复用本地现有的可用技能（Skills）与项目规范。
-- 编写代码时遵循工程最佳实践，遵循最小变更原则，避免过度修改无关逻辑。
+| 指令 | 说明 |
+| :--- | :--- |
+| `/prompt` 或 `/prompt status` | 查看当前提示词的激活状态、来源模式与生效内容预览 |
+| `/prompt reload` | 强制刷新磁盘文件缓存，即刻重新读取最新内容 |
+| `/prompt path` | 显示全局与项目工作区提示词文件的绝对物理路径及存在状态 |
+| `/prompt import-codex` | 一键检测并将本地 `~/.codex/AGENTS.md` 规则导入到当前配置中 |
+
+---
+
+<a id="quality"></a>
+
+## 🛡️ 质量验证与测试
+
+本项目遵循严谨的测试驱动与向后兼容设计，完整覆盖核心调度、生命周期管理与 Web 端点：
+
+```bash
+# 运行单元测试
+npm test
 ```
 
-你可以随时在 DSH 界面中的 **设置 -> 默认提示词** 或直接用文本编辑器编辑该文件，任何修改都会在下一次模型请求时立即生效！
+测试覆盖矩阵：
+- ✅ **Plugin Lifecycle**：验证在 Cordis 容器中正确注册 `systemPrompt.section` 与设置服务
+- ✅ **Order Resolution**：验证 5 种位置模式与自定义权重的排序映射
+- ✅ **Home Expansion**：验证跨平台路径 `~` 自动展开
+- ✅ **PromptManager**：涵盖行内模式、全局文件缓存机制、多源合并模式及标题包裹
+- ✅ **Web API**：验证状态获取、实时保存与 Codex 导入端点
+
+详细测试报告可查阅 [VERIFICATION.md](VERIFICATION.md)。
 
 ---
 
@@ -130,12 +172,12 @@ dsh-default-prompt:
 
 ```text
 dsh-default-prompt/
-├── package.json          # 模块定义、ESM 配置与 DSH bundle 声明
-├── cordis.patch.yml      # Cordis 宿主层与 Web 层自动挂载补丁
+├── package.json          # 模块规范、ESM 配置与 DSH bundle 声明
+├── cordis.patch.yml      # Cordis 宿主层与 Web 层自动挂载补丁契约
 ├── index.js              # 宿主核心：注册 systemPrompt.section、设置与 /prompt 指令
-├── client.js             # 前端界面：DSH Settings 可视化配置与实时预览卡片
+├── client.js             # 客户端界面：DSH Settings 可视化配置与实时预览卡片
 ├── src/
-│   ├── config.js         # Schemastery Schema、位置权重与默认模板
+│   ├── config.js         # Schemastery Schema、位置权重与默认模板定义
 │   ├── promptManager.js  # 提示词读取、多来源组合、mtime 缓存与 Codex 导入
 │   └── web.js            # 后端 HTTP API (/api/dsh-default-prompt) 路由
 ├── test/
@@ -143,9 +185,12 @@ dsh-default-prompt/
 │   ├── plugin.test.js        # 插件生命周期与注入测试
 │   ├── web.test.js           # Web API 接口测试
 │   └── run.js                # 统一轻量测试执行入口
-└── README.md
+├── VERIFICATION.md       # 自动化验证报告
+└── README.md             # 用户与开发者使用指南
 ```
 
-## 📄 License
+---
 
-MIT License © 2026 DeepSeek Harness Community
+## 📄 开源许可证
+
+[MIT License](LICENSE) © 2026 new-Beginner

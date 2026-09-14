@@ -33,6 +33,7 @@
   "engines": {
     "node": ">=20.0.0"
   },
+  "author": "new-Beginner",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -64,15 +65,18 @@
   },
   "scripts": {
     "test": "node --test test/*.test.js",
-    "pack:plugin": "npm pack"
+    "pack:plugin": "npm pack --cache ./.npm-cache && node -e \"require('node:fs').rmSync('.npm-cache', {recursive:true, force:true})\""
   },
   "keywords": [
     "deepseek-harness",
     "dsh",
+    "dsh-plugin",
     "cordis",
     "plugin",
     "system-prompt",
     "prompt",
-    "codex"
+    "codex",
+    "persona",
+    "developer-instructions"
   ]
 }
